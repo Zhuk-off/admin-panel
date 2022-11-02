@@ -1,3 +1,11 @@
 import $ from 'jquery';
 
-$('h1').fadeOut();
+$.get(
+    './api',
+    (data) => {
+        data.forEach((file) => {
+            $('body').append(`<h2>${file}</h2>`);
+        });
+    },
+    'JSON'
+);
