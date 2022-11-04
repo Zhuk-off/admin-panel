@@ -3,7 +3,7 @@ const webpack = require('webpack-stream');
 const sass = require('gulp-sass')(require('sass'));
 
 const distServer = 'C:/MAMP/htdocs/apanel/admin';
-const dist = 'dist/admin';
+// const dist = 'dist/admin'
 
 gulp.task('copy-html', () => {
     return gulp.src('./src/index.html').pipe(gulp.dest(distServer));
