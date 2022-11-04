@@ -26,7 +26,28 @@ export default class Editor extends Component {
     open(page) {
         this.currentPage = `../${page}`;
         this.iframe.load(this.currentPage, () => {
-            console.log(this.currentPage);
+            const body = this.iframe.contentDocument.body;
+            const textNodes = [];
+            function recursy(element) {
+                element.childNodes.forEach((child) => {
+                    if (
+                        child.nodeName === '#text' &&
+                        child.nodeValue.replace(/\s+/g, '').length 
+                    ) {
+                        textNodes.push(child);
+                    } else {
+                        recursy(child);
+                    }
+                });
+            }
+            recursy(body);
+            textNodes.forEach((node) => {
+                const wrapper =
+                    this.iframe.contentDocument.createElement('text-editor'); 
+                node.parentNode.replaceChild(wrapper, node); 
+                wrapper.appendChild(node);
+                wrapper.contentEditable = 'true';
+            });
         });
     }
 
