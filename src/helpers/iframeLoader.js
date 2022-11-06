@@ -1,4 +1,4 @@
-HTMLIFrameElement.prototype.load = function (url, callback) {
+HTMLIFrameElement.prototype.load = async function (url, callback) {
     const iframe = this;
     try {
         iframe.src = url + '?rnd=' + Math.random().toString().substring(2);
@@ -11,7 +11,6 @@ HTMLIFrameElement.prototype.load = function (url, callback) {
             callback(error);
         }
     }
-
     const maxTime = 60000;
     const interval = 200;
 

@@ -24,31 +24,63 @@ export default class Editor extends Component {
     }
 
     open(page) {
-        this.currentPage = `../${page}`;
-        this.iframe.load(this.currentPage, () => {
-            const body = this.iframe.contentDocument.body;
-            const textNodes = [];
-            function recursy(element) {
-                element.childNodes.forEach((child) => {
-                    if (
-                        child.nodeName === '#text' &&
-                        child.nodeValue.replace(/\s+/g, '').length 
-                    ) {
-                        textNodes.push(child);
-                    } else {
-                        recursy(child);
-                    }
-                });
-            }
-            recursy(body);
-            textNodes.forEach((node) => {
-                const wrapper =
-                    this.iframe.contentDocument.createElement('text-editor'); 
-                node.parentNode.replaceChild(wrapper, node); 
-                wrapper.appendChild(node);
-                wrapper.contentEditable = 'true';
+        this.currentPage = `../${page}?rnd-${Math.random()}`;
+
+        axios
+            .get(`../${page}`)
+            .then((res) => this.parseStrToDom(res.data))
+            .then(this.wrapTextNodes)
+            .then(this.serializeDomToString)
+            .then((res) => axios.post('./api/saveTempPage.php', { html: res }))
+            .then(async () => {
+                this.currentPage = `../temp.html`;
+                await this.iframe.load('../temp.html');
+            })
+            .then(() => {
+                this.enableEditing();
             });
+    }
+
+    enableEditing() {
+        this.iframe.contentDocument.body
+            .querySelectorAll('text-editor')
+            .forEach((element) => {
+                element.contentEditable = 'true';
+            });
+    }
+
+    parseStrToDom(str) {
+        const parser = new DOMParser();
+        return parser.parseFromString(str, 'text/html');
+    }
+
+    wrapTextNodes(dom) {
+        const body = dom.body;
+        const textNodes = [];
+        function recursy(element) {
+            element.childNodes.forEach((child) => {
+                if (
+                    child.nodeName === '#text' &&
+                    child.nodeValue.replace(/\s+/g, '').length
+                ) {
+                    textNodes.push(child);
+                } else {
+                    recursy(child);
+                }
+            });
+        }
+        recursy(body);
+        textNodes.forEach((node) => {
+            const wrapper = dom.createElement('text-editor');
+            node.parentNode.replaceChild(wrapper, node);
+            wrapper.appendChild(node);
         });
+        return dom;
+    }
+
+    serializeDomToString(dom) {
+        const serializer = new XMLSerializer();
+        return serializer.serializeToString(dom);
     }
 
     loadPageList() {
