@@ -30,15 +30,17 @@ export default class Editor extends Component {
             .get(`../${page}`)
             .then((res) => this.parseStrToDom(res.data))
             .then(this.wrapTextNodes)
+            .then((dom) => {
+                this.virtualDom = dom;
+                return dom;
+            })
             .then(this.serializeDomToString)
             .then((res) => axios.post('./api/saveTempPage.php', { html: res }))
             .then(async () => {
                 this.currentPage = `../temp.html`;
                 await this.iframe.load('../temp.html');
             })
-            .then(() => {
-                this.enableEditing();
-            });
+            .then(() => this.enableEditing());
     }
 
     enableEditing() {
@@ -46,7 +48,16 @@ export default class Editor extends Component {
             .querySelectorAll('text-editor')
             .forEach((element) => {
                 element.contentEditable = 'true';
+                element.addEventListener('input', () => {
+                    this.onTextEdit(element);
+                });
             });
+    }
+
+    onTextEdit(element) {
+        const id = element.getAttribute('data-nodeid');
+        this.virtualDom.body.querySelector(`[data-nodeid="${id}"]`).innerHTML =
+            element.innerHTML;
     }
 
     parseStrToDom(str) {
@@ -70,10 +81,11 @@ export default class Editor extends Component {
             });
         }
         recursy(body);
-        textNodes.forEach((node) => {
+        textNodes.forEach((node, i) => {
             const wrapper = dom.createElement('text-editor');
             node.parentNode.replaceChild(wrapper, node);
             wrapper.appendChild(node);
+            wrapper.setAttribute('data-nodeid', i);
         });
         return dom;
     }
