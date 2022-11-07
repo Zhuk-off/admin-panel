@@ -12,17 +12,28 @@ export default class EditorText {
             this.onKeypress(event)
         );
         this.element.addEventListener('input', () => this.onTextEdit());
+        if (
+            this.element.parentNode.nodeName === 'A' ||
+            this.element.parentNode.nodeName === 'BUTTON'
+        ) {
+            this.element.addEventListener('contextmenu', (e) =>
+                this.onCtxMenu(e)
+            );
+        }
+    }
+
+    onCtxMenu(e) {
+        e.preventDefault();
+        this.onClick();
     }
 
     onKeypress(event) {
-        console.log(event.keyCode);
         if (event.keyCode === 13) {
             this.element.blur();
         }
     }
 
     onBlur() {
-        console.log('blur');
         this.element.removeAttribute('contentEditable');
     }
 
