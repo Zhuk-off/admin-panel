@@ -30,9 +30,9 @@ export default class Editor extends Component {
 
     init(page, e) {
         if (e !== undefined && e !== null) {
-            e.preventDefault()
+            e.preventDefault();
         }
-        this.isLoading()
+        this.isLoading();
         this.iframe = document.querySelector('iframe');
         this.open(page, this.isLoaded);
         this.loadPageList();
@@ -40,7 +40,6 @@ export default class Editor extends Component {
 
     open(page, spinner) {
         this.currentPage = page;
-        console.log(this.currentPage);
 
         axios
             .get(`../${page}?rnd-${Math.random()}`)
@@ -133,7 +132,7 @@ export default class Editor extends Component {
         const spinner = loading ? <Spinner active /> : <Spinner />;
         return (
             <>
-                <iframe src={this.currentPage} />
+                <iframe src="" />
 
                 {spinner}
 
@@ -163,7 +162,7 @@ export default class Editor extends Component {
                     modal="true"
                     target={'modal-open'}
                     data={pageList}
-                    redirect = {this.init}
+                    redirect={this.init}
                 />
             </>
         );
