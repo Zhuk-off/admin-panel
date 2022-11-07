@@ -5,6 +5,8 @@ import DOMHelper from '../../helpers/dom-helper.js';
 import EditorText from '../editor-text';
 import UIkit from 'uikit';
 import Spinner from '../spinner';
+import ConfirmModal from '../confirm-modal';
+import ChooseModal from '../choose-modal';
 
 export default class Editor extends Component {
     constructor() {
@@ -18,13 +20,19 @@ export default class Editor extends Component {
         this.createNewPage = this.createNewPage.bind(this);
         this.isLoading = this.isLoading.bind(this);
         this.isLoaded = this.isLoaded.bind(this);
+        this.save = this.save.bind(this);
+        this.init = this.init.bind(this);
     }
 
     componentDidMount() {
         this.init(this.currentPage);
     }
 
-    init(page) {
+    init(page, e) {
+        if (e !== undefined && e !== null) {
+            e.preventDefault()
+        }
+        this.isLoading()
         this.iframe = document.querySelector('iframe');
         this.open(page, this.isLoaded);
         this.loadPageList();
@@ -32,6 +40,7 @@ export default class Editor extends Component {
 
     open(page, spinner) {
         this.currentPage = page;
+        console.log(this.currentPage);
 
         axios
             .get(`../${page}?rnd-${Math.random()}`)
@@ -44,7 +53,7 @@ export default class Editor extends Component {
             .then(DOMHelper.serializeDomToString)
             .then((res) => axios.post('./api/saveTempPage.php', { html: res }))
             .then(async () => {
-                await this.iframe.load('../temp.html');
+                await this.iframe.load('../temp_change_page.html');
             })
             .then(() => this.enableEditing())
             .then(() => this.injectStyles())
@@ -92,7 +101,9 @@ export default class Editor extends Component {
     }
 
     loadPageList() {
-        axios.get('./api').then((res) => this.setState({ pageList: res.data }));
+        axios
+            .get('./api/pageList.php')
+            .then((res) => this.setState({ pageList: res.data }));
     }
 
     createNewPage() {
@@ -118,7 +129,7 @@ export default class Editor extends Component {
     }
 
     render() {
-        const loading = this.state.loading;
+        const { loading, pageList } = this.state;
         const spinner = loading ? <Spinner active /> : <Spinner />;
         return (
             <>
@@ -128,6 +139,13 @@ export default class Editor extends Component {
 
                 <div className="panel">
                     <button
+                        className="uk-button uk-button-primary uk-margin-small-right"
+                        type="button"
+                        uk-toggle="target: #modal-open"
+                    >
+                        Открыть страницу
+                    </button>
+                    <button
                         className="uk-button uk-button-primary"
                         type="button"
                         uk-toggle="target: #modal-save"
@@ -136,42 +154,17 @@ export default class Editor extends Component {
                     </button>
                 </div>
 
-                <div id="modal-save" uk-modal="true" container="false">
-                    <div className="uk-modal-dialog uk-modal-body">
-                        <h2 className="uk-modal-title">Сохранение</h2>
-                        <p>Вы действительно хотите сохранить изменеия???</p>
-                        <p className="uk-text-right">
-                            <button
-                                className="uk-button uk-button-default uk-modal-close"
-                                type="button"
-                            >
-                                Отменить
-                            </button>
-                            <button
-                                className="uk-button uk-button-primary uk-modal-close"
-                                type="button"
-                                onClick={() => {
-                                    this.save(
-                                        () => {
-                                            UIkit.notification({
-                                                message: 'Успешно сохранено',
-                                                status: 'success',
-                                            });
-                                        },
-                                        () => {
-                                            UIkit.notification({
-                                                message: 'Ошибка сохранения',
-                                                status: 'danger',
-                                            });
-                                        }
-                                    );
-                                }}
-                            >
-                                Опубликовать
-                            </button>
-                        </p>
-                    </div>
-                </div>
+                <ConfirmModal
+                    modal="true"
+                    target={'modal-save'}
+                    method={this.save}
+                />
+                <ChooseModal
+                    modal="true"
+                    target={'modal-open'}
+                    data={pageList}
+                    redirect = {this.init}
+                />
             </>
         );
     }
