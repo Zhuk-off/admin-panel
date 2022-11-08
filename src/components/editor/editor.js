@@ -8,6 +8,7 @@ import Spinner from '../spinner';
 import ConfirmModal from '../confirm-modal';
 import ChooseModal from '../choose-modal';
 import Panel from '../panel';
+import EditorMeta from '../editor-meta';
 
 export default class Editor extends Component {
     constructor() {
@@ -177,6 +178,15 @@ export default class Editor extends Component {
                     data={backupsList}
                     redirect={this.restoreBackup}
                 />
+                {this.virtualDom ? (
+                    <EditorMeta
+                        modal="true"
+                        target={'modal-meta'}
+                        virtualDom={this.virtualDom}
+                    />
+                ) : (
+                    false
+                )}
             </>
         );
     }
