@@ -1,5 +1,4 @@
 export default class DOMHelper {
-
     static parseStrToDom(str) {
         const parser = new DOMParser();
         return parser.parseFromString(str, 'text/html');
@@ -38,6 +37,19 @@ export default class DOMHelper {
     static unwrapTextNodes(dom) {
         dom.body.querySelectorAll('text-editor').forEach((element) => {
             element.parentNode.replaceChild(element.firstChild, element);
+        });
+    }
+
+    static wrapImages(dom) {
+        dom.body.querySelectorAll('img').forEach((img, i) => {
+            img.setAttribute('data-editableimgid', i);
+        });
+        return dom;
+    }
+
+    static unwrapImages(dom) {
+        dom.body.querySelectorAll('[data-editableimgid]').forEach((img) => {
+            img.removeAttribute('data-editableimgid');
         });
     }
 }

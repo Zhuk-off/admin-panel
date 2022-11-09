@@ -9,6 +9,7 @@ import ConfirmModal from '../confirm-modal';
 import ChooseModal from '../choose-modal';
 import Panel from '../panel';
 import EditorMeta from '../editor-meta';
+import EditorImages from '../editor-images';
 
 export default class Editor extends Component {
     constructor() {
@@ -49,6 +50,7 @@ export default class Editor extends Component {
             .get(`../${page}?rnd-${Math.random()}`)
             .then((res) => DOMHelper.parseStrToDom(res.data))
             .then(DOMHelper.wrapTextNodes)
+            .then(DOMHelper.wrapImages)
             .then((dom) => {
                 this.virtualDom = dom;
                 return dom;
@@ -64,15 +66,16 @@ export default class Editor extends Component {
         this.loadBackupsList();
     }
 
-    async save(onSuccess, onError) {
+    async save() {
         this.isLoading();
         const newDom = this.virtualDom.cloneNode(this.virtualDom);
         DOMHelper.unwrapTextNodes(newDom);
+        DOMHelper.unwrapImages(newDom);
         const html = DOMHelper.serializeDomToString(newDom);
         await axios
             .post('./api/savePage.php', { pageName: this.currentPage, html })
-            .then(onSuccess)
-            .catch(onError)
+            .then(() => this.showNotifications('Успешно сохранено', 'success'))
+            .catch(() => this.showNotifications('Ошибка сохранения', 'danger'))
             .finally(this.isLoaded);
         this.loadBackupsList();
     }
@@ -85,8 +88,23 @@ export default class Editor extends Component {
                 const virtualElement = this.virtualDom.body.querySelector(
                     `[data-nodeid="${id}"]`
                 );
-                virtualElement.innerHTML = element.innerHTML;
                 new EditorText(element, virtualElement);
+            });
+
+        this.iframe.contentDocument.body
+            .querySelectorAll('[data-editableimgid]')
+            .forEach((element) => {
+                const id = element.getAttribute('data-editableimgid');
+                const virtualElement = this.virtualDom.body.querySelector(
+                    `[data-editableimgid="${id}"]`
+                );
+                new EditorImages(
+                    element,
+                    virtualElement,
+                    this.isLoading,
+                    this.isLoaded,
+                    this.showNotifications
+                );
             });
     }
 
@@ -101,8 +119,16 @@ export default class Editor extends Component {
             outline: 3px solid red;
             outline-offset: 8px;
         }
+        [data-editableimgid]:hover {
+            outline: 3px solid orange;
+            outline-offset: 8px;
+        }
         `;
         this.iframe.contentDocument.head.appendChild(style);
+    }
+
+    showNotifications(message, status) {
+        UIkit.notification({ message, status });
     }
 
     loadPageList() {
@@ -156,6 +182,12 @@ export default class Editor extends Component {
         return (
             <>
                 <iframe src="" />
+                <input
+                    id="img-upload"
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                ></input>
 
                 {spinner}
 
