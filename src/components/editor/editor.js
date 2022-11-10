@@ -10,6 +10,7 @@ import ChooseModal from '../choose-modal';
 import Panel from '../panel';
 import EditorMeta from '../editor-meta';
 import EditorImages from '../editor-images';
+import Login from '../login';
 
 export default class Editor extends Component {
     constructor() {
@@ -20,32 +21,65 @@ export default class Editor extends Component {
             newPageName: '',
             backupsList: [],
             loading: true,
+            auth: false,
+            loginError: false,
+            loginLengthError: false,
         };
         this.isLoading = this.isLoading.bind(this);
         this.isLoaded = this.isLoaded.bind(this);
         this.save = this.save.bind(this);
         this.init = this.init.bind(this);
         this.restoreBackup = this.restoreBackup.bind(this);
+        this.login = this.login.bind(this);
     }
 
     componentDidMount() {
-        this.init(this.currentPage);
+        this.checkAuth();
+    }
+    
+    componentDidUpdate(prevProps, prevState){
+        if(this.state.auth != prevState.auth) {
+            this.init(this.currentPage);
+
+        }
+
+    }
+
+    checkAuth() {
+        axios.get('./api/checkAuth.php').then((res) => {
+            console.log(res.data.auth);
+            this.setState({ auth: res.data.auth });
+        });
+    }
+
+    login(pass) {
+        if (pass.length > 8) {
+            axios.post('./api/login.php', { password: pass })
+            .then(res => {
+                this.setState({
+                    auth: res.data.auth
+                })
+            });
+        }
     }
 
     init(page, e) {
         if (e !== undefined && e !== null) {
             e.preventDefault();
         }
-        this.isLoading();
-        this.iframe = document.querySelector('iframe');
-        this.open(page, this.isLoaded);
-        this.loadPageList();
-        this.loadBackupsList();
+
+        if (this.state.auth) {
+            this.isLoading();
+            this.iframe = document.querySelector('iframe');
+            this.open(page, this.isLoaded);
+            this.loadPageList();
+            this.loadBackupsList();
+        }
     }
 
     open(page, spinner) {
         this.currentPage = page;
-
+console.log('open',page);
         axios
             .get(`../${page}?rnd-${Math.random()}`)
             .then((res) => DOMHelper.parseStrToDom(res.data))
@@ -177,8 +211,12 @@ export default class Editor extends Component {
     }
 
     render() {
-        const { loading, pageList, backupsList } = this.state;
+        const { loading, pageList, backupsList, auth } = this.state;
         const spinner = loading ? <Spinner active /> : <Spinner />;
+        if (!auth) {
+            return <Login login={this.login} />;
+        }
+
         return (
             <>
                 <iframe src="" />

@@ -57,6 +57,7 @@ gulp.task('buld-sass', () => {
 });
 
 gulp.task('copy-api', () => {
+    gulp.src('./src/api/**/.*').pipe(gulp.dest(distServer + '/api'));
     return gulp.src('./src/api/**/*.*').pipe(gulp.dest(distServer + '/api'));
 });
 
