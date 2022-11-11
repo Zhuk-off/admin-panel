@@ -13,26 +13,16 @@ import EditorImages from '../editor-images';
 import Login from '../login';
 
 export default class Editor extends Component {
-    constructor() {
-        super();
-        this.currentPage = 'index.html';
-        this.state = {
-            pageList: [],
-            newPageName: '',
-            backupsList: [],
-            loading: true,
-            auth: false,
-            loginError: false,
-            loginLengthError: false,
-        };
-        this.isLoading = this.isLoading.bind(this);
-        this.isLoaded = this.isLoaded.bind(this);
-        this.save = this.save.bind(this);
-        this.init = this.init.bind(this);
-        this.restoreBackup = this.restoreBackup.bind(this);
-        this.login = this.login.bind(this);
-        this.logout = this.logout.bind(this);
-    }
+    currentPage = 'index.html';
+    state = {
+        pageList: [],
+        newPageName: '',
+        backupsList: [],
+        loading: true,
+        auth: false,
+        loginError: false,
+        loginLengthError: false,
+    };
 
     componentDidMount() {
         this.checkAuth();
@@ -44,13 +34,13 @@ export default class Editor extends Component {
         }
     }
 
-    checkAuth() {
+    checkAuth = () => {
         axios.get('./api/checkAuth.php').then((res) => {
             this.setState({ auth: res.data.auth });
         });
-    }
+    };
 
-    login(pass) {
+    login = (pass) => {
         if (pass.length > 8) {
             axios.post('./api/login.php', { password: pass }).then((res) => {
                 this.setState({
@@ -65,15 +55,15 @@ export default class Editor extends Component {
                 loginLengthError: true,
             });
         }
-    }
+    };
 
-    logout() {
+    logout = () => {
         axios.get('./api/logout.php').then(() => {
             window.location.replace('/');
         });
-    }
+    };
 
-    init(page, e) {
+    init = (page, e) => {
         if (e !== undefined && e !== null) {
             e.preventDefault();
         }
@@ -85,9 +75,9 @@ export default class Editor extends Component {
             this.loadPageList();
             this.loadBackupsList();
         }
-    }
+    };
 
-    open(page, spinner) {
+    open = (page, spinner) => {
         this.currentPage = page;
         axios
             .get(`../${page}?rnd-${Math.random()}`)
@@ -107,9 +97,9 @@ export default class Editor extends Component {
             .then(() => this.injectStyles())
             .then(spinner);
         this.loadBackupsList();
-    }
+    };
 
-    async save() {
+    save = async () => {
         this.isLoading();
         const newDom = this.virtualDom.cloneNode(this.virtualDom);
         DOMHelper.unwrapTextNodes(newDom);
@@ -121,9 +111,9 @@ export default class Editor extends Component {
             .catch(() => this.showNotifications('Ошибка сохранения', 'danger'))
             .finally(this.isLoaded);
         this.loadBackupsList();
-    }
+    };
 
-    enableEditing() {
+    enableEditing = () => {
         this.iframe.contentDocument.body
             .querySelectorAll('text-editor')
             .forEach((element) => {
@@ -149,9 +139,9 @@ export default class Editor extends Component {
                     this.showNotifications
                 );
             });
-    }
+    };
 
-    injectStyles() {
+    injectStyles = () => {
         const style = this.iframe.contentDocument.createElement('style');
         style.innerHTML = `
         text-editor:hover {
@@ -168,19 +158,19 @@ export default class Editor extends Component {
         }
         `;
         this.iframe.contentDocument.head.appendChild(style);
-    }
+    };
 
-    showNotifications(message, status) {
+    showNotifications = (message, status) => {
         UIkit.notification({ message, status });
-    }
+    };
 
-    loadPageList() {
+    loadPageList = () => {
         axios
             .get('./api/pageList.php')
             .then((res) => this.setState({ pageList: res.data }));
-    }
+    };
 
-    loadBackupsList() {
+    loadBackupsList = () => {
         axios.get('./backups/backups.json').then((res) =>
             this.setState({
                 backupsList: res.data.filter((backup) => {
@@ -188,9 +178,9 @@ export default class Editor extends Component {
                 }),
             })
         );
-    }
+    };
 
-    restoreBackup(backup, e) {
+    restoreBackup = (backup, e) => {
         if (e !== undefined && e !== null) {
             e.preventDefault();
         }
@@ -209,15 +199,15 @@ export default class Editor extends Component {
             .then(() => {
                 this.open(this.currentPage, this.isLoaded);
             });
-    }
+    };
 
-    isLoading() {
+    isLoading = () => {
         this.setState({ loading: true });
-    }
+    };
 
-    isLoaded() {
+    isLoaded = () => {
         this.setState({ loading: false });
-    }
+    };
 
     render() {
         const {
