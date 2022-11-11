@@ -1,9 +1,12 @@
 const gulp = require('gulp');
 const webpack = require('webpack-stream');
 const sass = require('gulp-sass')(require('sass'));
+const autoprefixer = require('autoprefixer');
+const cleanCSS = require('gulp-clean-css');
+const postcss = require('gulp-postcss');
 
 const distServer = 'C:/MAMP/htdocs/apanel/admin';
-// const dist = 'dist/admin'
+const prod = 'build/admin';
 
 gulp.task('copy-html', () => {
     return gulp.src('./src/index.html').pipe(gulp.dest(distServer));
@@ -85,5 +88,52 @@ gulp.task(
         'copy-assets'
     )
 );
+
+gulp.task('prod', () => {
+    gulp.src('./src/index.html').pipe(gulp.dest(prod));
+    gulp.src('./src/api/**/.*').pipe(gulp.dest(prod + '/api'));
+    gulp.src('./src/api/**/*.*').pipe(gulp.dest(prod + '/api'));
+    gulp.src('./src/assets/**/*.*').pipe(gulp.dest(prod + '/assets'));
+    gulp.src('./src/script.js')
+        .pipe(
+            webpack({
+                mode: 'production',
+                output: {
+                    filename: 'script.js',
+                },
+                module: {
+                    rules: [
+                        {
+                            test: /\.m?js$/,
+                            exclude: /(node_modules|bower_components)/,
+                            use: {
+                                loader: 'babel-loader',
+                                options: {
+                                    presets: [
+                                        [
+                                            '@babel/preset-env',
+                                            {
+                                                debug: false,
+                                                corejs: 3,
+                                                useBuiltIns: 'usage',
+                                            },
+                                        ],
+                                        '@babel/react',
+                                    ],
+                                },
+                            },
+                        },
+                    ],
+                },
+            })
+        )
+        .pipe(gulp.dest(prod));
+    return gulp
+        .src('./src/scss/style.scss')
+        .pipe(sass().on('error', sass.logError))
+        .pipe(postcss([autoprefixer()]))
+        .pipe(cleanCSS())
+        .pipe(gulp.dest(prod));
+});
 
 gulp.task('default', gulp.parallel('watch', 'build'));
