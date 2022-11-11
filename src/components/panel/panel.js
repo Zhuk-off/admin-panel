@@ -31,6 +31,13 @@ const Panel = () => {
             >
                 Восстановить страницу
             </button>
+            <button
+                className="uk-button uk-button-danger uk-margin-small-right"
+                type="button"
+                uk-toggle="target: #modal-logout"
+            >
+                Выйти
+            </button>
         </div>
     );
 };

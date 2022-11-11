@@ -31,36 +31,46 @@ export default class Editor extends Component {
         this.init = this.init.bind(this);
         this.restoreBackup = this.restoreBackup.bind(this);
         this.login = this.login.bind(this);
+        this.logout = this.logout.bind(this);
     }
 
     componentDidMount() {
         this.checkAuth();
     }
-    
-    componentDidUpdate(prevProps, prevState){
-        if(this.state.auth != prevState.auth) {
+
+    componentDidUpdate(prevProps, prevState) {
+        if (this.state.auth != prevState.auth) {
             this.init(this.currentPage);
-
         }
-
     }
 
     checkAuth() {
         axios.get('./api/checkAuth.php').then((res) => {
-            console.log(res.data.auth);
             this.setState({ auth: res.data.auth });
         });
     }
 
     login(pass) {
         if (pass.length > 8) {
-            axios.post('./api/login.php', { password: pass })
-            .then(res => {
+            axios.post('./api/login.php', { password: pass }).then((res) => {
                 this.setState({
-                    auth: res.data.auth
-                })
+                    auth: res.data.auth,
+                    loginError: !res.data.auth,
+                    loginLengthError: false,
+                });
+            });
+        } else {
+            this.setState({
+                loginError: false,
+                loginLengthError: true,
             });
         }
+    }
+
+    logout() {
+        axios.get('./api/logout.php').then(() => {
+            window.location.replace('/');
+        });
     }
 
     init(page, e) {
@@ -79,7 +89,6 @@ export default class Editor extends Component {
 
     open(page, spinner) {
         this.currentPage = page;
-console.log('open',page);
         axios
             .get(`../${page}?rnd-${Math.random()}`)
             .then((res) => DOMHelper.parseStrToDom(res.data))
@@ -211,10 +220,23 @@ console.log('open',page);
     }
 
     render() {
-        const { loading, pageList, backupsList, auth } = this.state;
+        const {
+            loading,
+            pageList,
+            backupsList,
+            auth,
+            loginError,
+            loginLengthError,
+        } = this.state;
         const spinner = loading ? <Spinner active /> : <Spinner />;
         if (!auth) {
-            return <Login login={this.login} />;
+            return (
+                <Login
+                    login={this.login}
+                    lengthErr={loginLengthError}
+                    logErr={loginError}
+                />
+            );
         }
 
         return (
@@ -235,6 +257,21 @@ console.log('open',page);
                     modal="true"
                     target={'modal-save'}
                     method={this.save}
+                    text={{
+                        title: 'Сохранение',
+                        descr: 'Вы действительно хотите сохранить изменения?',
+                        button: 'Опубликовать',
+                    }}
+                />
+                <ConfirmModal
+                    modal="true"
+                    target={'modal-logout'}
+                    method={this.logout}
+                    text={{
+                        title: 'Выход',
+                        descr: 'Вы действительно хотите выйти?',
+                        button: 'Выйти',
+                    }}
                 />
                 <ChooseModal
                     modal="true"

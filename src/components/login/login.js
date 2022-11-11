@@ -18,7 +18,18 @@ export default class Login extends Component {
 
     render() {
         const { pass } = this.state;
-        const { login } = this.props;
+        const { login, lengthErr, logErr } = this.props;
+
+        const renderLogErr = logErr ? (
+            <span className="login-error">Введен неправильный пароль!</span>
+        ) : null;
+
+        const renderLengthErr = lengthErr ? (
+            <span className="login-error">
+                Пароль должен быть длиннее 8 символов
+            </span>
+        ) : null;
+
         return (
             <div className="login-container">
                 <div className="login">
@@ -35,12 +46,12 @@ export default class Login extends Component {
                         defaultValue={pass}
                         onChange={(e) => this.onPassChange(e)}
                     ></input>
-                    <span className='login-error'>Введен неправильный пароль!</span>
-                    <span className='login-error'>Пароль должен быть длиннее 8 символов</span>
+                    {renderLogErr}
+                    {renderLengthErr}
                     <button
                         className="uk-button uk-button-primary uk-margin-top"
                         type="button"
-                        onClick={()=> login(pass)}
+                        onClick={() => login(pass)}
                     >
                         Вход
                     </button>

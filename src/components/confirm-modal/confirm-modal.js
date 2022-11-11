@@ -1,11 +1,12 @@
 import React from 'react';
 
-const ConfirmModal = ({ modal, target, method }) => {
+const ConfirmModal = ({ modal, target, method, text }) => {
+    const { title, descr, button } = text;
     return (
         <div id={target} uk-modal={modal} container="false">
             <div className="uk-modal-dialog uk-modal-body">
-                <h2 className="uk-modal-title">Сохранение</h2>
-                <p>Вы действительно хотите сохранить изменеия?</p>
+                <h2 className="uk-modal-title">{title}</h2>
+                <p>{descr}</p>
                 <p className="uk-text-right">
                     <button
                         className="uk-button uk-button-default uk-modal-close uk-margin-small-right"
@@ -18,7 +19,7 @@ const ConfirmModal = ({ modal, target, method }) => {
                         type="button"
                         onClick={() => method()}
                     >
-                        Опубликовать
+                        {button}
                     </button>
                 </p>
             </div>
